@@ -1,216 +1,343 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TennisKata
 {
     public class Tennis
     {
-        private string _player1Name;
-        private int _player1Score;
-        private string _player2Name;
-        private int _player2Score;
-        private string _score1;
-        private string _score2;
+        private string _partScore;
+        private string _partScore2;
+        private string _scoreResult;
 
-        public string Player1Name => _player1Name;
-        public string Player2Name => _player2Name;
-
-        public string Score1
+        public Tennis(string player1Name, string player2Name)
         {
-            get
+            Player1Name = player1Name;
+            Player2Name = player2Name;
+        }
+
+        public string Player1Name { get; }
+
+        public int Player1PointCount { get; set; }
+        public string Player2Name { get; }
+
+        public int Player2PointCount { get; set; }
+
+        public void CountScoreResult()
+        {
+            PointCase();
+            if (IsEqual())
             {
-                switch (_player1Score)
+                IsDeuce();
+            }
+            else
+            {
+                Point2Case();
+                if (IsGamePoint())
                 {
-                    case 0:
-                        _score1 = "Love";
-                        break;
-
-                    case 15:
-                        _score1 = "Fifteen";
-                        break;
-
-                    case 30:
-                        _score1 = "Thirty";
-                        break;
-
-                    case 40:
-                        _score1 = "Forty";
-                        break;
+                    IsWin();
                 }
-
-                if (_player1Score == 40 && _player1Score == _player2Score)
-                {
-                    _score1 = "";
-                }
-
-                return _score1;
             }
         }
 
-        public string Score2
+        public bool IsDeuce()
         {
-            get
+            if (Player1PointCount >= 3)
             {
-                if (_player1Score == _player2Score)
+                _partScore = "";
+                _partScore2 = "Deuce";
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsEqual()
+        {
+            if (Player1PointCount == Player2PointCount)
+            {
+                _partScore2 = " All";
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsGamePoint()
+        {
+            var result = false;
+            if (Player2PointCount > 3 || Player1PointCount > 3)
+            {
+                if (Math.Abs(Player1PointCount - Player2PointCount) >= 1)
                 {
-                    if (_player2Score != 40)
+                    string playerName;
+                    if (Player1PointCount > Player2PointCount)
                     {
-                        _score2 = "All";
+                        playerName = Player1Name;
                     }
                     else
                     {
-                        _score2 = "Deuce";
+                        playerName = Player2Name;
                     }
+                    _partScore = playerName;
+                    _partScore2 = " Adv";
+                    result = true;
                 }
-                else switch (_player2Score)
-                    {
-                        case 15:
-                            _score2 = "Fifteen";
-                            break;
+            }
 
-                        case 40:
-                            _score2 = "Forty";
-                            break;
+            return result;
+        }
 
-                        case 0:
-                            _score2 = "Love";
-                            break;
-                    }
+        public void Point2Case()
+        {
+            switch (Player2PointCount)
+            {
+                case 0:
+                    _partScore2 = " Love";
+                    break;
 
-                return _score2;
+                case 1:
+                    _partScore2 = " Fifteen";
+                    break;
+
+                case 2:
+                    _partScore2 = " Thirty";
+                    break;
+
+                case 3:
+                    _partScore2 = " Forty";
+                    break;
+
+                default:
+                    _partScore2 = "";
+                    break;
             }
         }
 
-        public string GetPlayerName()
+        public void PointCase()
         {
-            var playerName = "";
-            playerName = _player1Score > _player2Score ? Player1Name : Player2Name;
+            switch (Player1PointCount)
+            {
+                case 0:
+                    _partScore = "Love";
+                    break;
 
-            return playerName;
+                case 1:
+                    _partScore = "Fifteen";
+                    break;
+
+                case 2:
+                    _partScore = "Thirty";
+                    break;
+
+                case 3:
+                    _partScore = "Forty";
+                    break;
+
+                default:
+                    _partScore = "";
+                    break;
+            }
         }
 
         public string Score()
         {
-            if (Score2.Equals("Deuce"))
-            {
-                return $"{Score2}";
-            }
-
-            if (_player1Score == 41 || _player2Score == 41)
-            {
-                return $"{GetPlayerName()} Adv";
-            }
-
-            if (_player1Score == 42 || _player2Score == 42)
-            {
-                return $"{GetPlayerName()} Win";
-            }
-            return $"{Score1} {Score2}";
+            CountScoreResult();
+            _scoreResult = _partScore + _partScore2;
+            return _scoreResult;
         }
 
-        public void SetPlayer(string player1Name, string player2Name)
+        public void SetPointCount(int point1, int point2)
         {
-            _player1Name = player1Name;
-            _player2Name = player2Name;
+            Player1PointCount = point1;
+            Player2PointCount = point2;
         }
 
-        public void SetScore(int player1Score, int player2Score)
+        private bool IsWin()
         {
-            _player1Score = player1Score;
-            _player2Score = player2Score;
+            var result = false;
+            if (Math.Abs(Player1PointCount - Player2PointCount) >= 2)
+            {
+                string playerName;
+                if (Player1PointCount > Player2PointCount)
+                {
+                    playerName = Player1Name;
+                    result = true;
+                }
+                else
+                {
+                    playerName = Player2Name;
+                }
+                _partScore = playerName;
+                _partScore2 = " Win";
+            }
+
+            return result;
         }
     }
 
     [TestClass]
     public class UnitTest1
     {
-        private readonly Tennis _tennis = new Tennis();
-        private string _score;
+        private readonly Tennis _tennis = new Tennis("Sherry", "April");
+
+        [TestMethod]
+        public void Deuce()
+        {
+            _tennis.SetPointCount(3, 3);
+            var score = _tennis.Score();
+            Assert.AreEqual("Deuce", score);
+        }
 
         [TestMethod]
         public void Fifteen_All()
         {
-            _tennis.SetScore(15, 15);
-            _score = _tennis.Score();
-            Assert.AreEqual("Fifteen All", _score);
+            _tennis.SetPointCount(1, 1);
+            var score = _tennis.Score();
+            Assert.AreEqual("Fifteen All", score);
+        }
+
+        [TestMethod]
+        public void Fifteen_Forty()
+        {
+            _tennis.SetPointCount(1, 3);
+            var score = _tennis.Score();
+            Assert.AreEqual("Fifteen Forty", score);
         }
 
         [TestMethod]
         public void Fifteen_Love()
         {
-            _tennis.SetScore(15, 0);
-            _score = _tennis.Score();
-            Assert.AreEqual("Fifteen Love", _score);
+            _tennis.SetPointCount(1, 0);
+            var score = _tennis.Score();
+            Assert.AreEqual("Fifteen Love", score);
         }
 
         [TestMethod]
-        public void Forty_All()
+        public void Fifteen_Thirty()
         {
-            _tennis.SetScore(40, 40);
-            _score = _tennis.Score();
-            Assert.AreEqual("Deuce", _score);
+            _tennis.SetPointCount(1, 2);
+            var score = _tennis.Score();
+            Assert.AreEqual("Fifteen Thirty", score);
         }
 
         [TestMethod]
         public void Forty_Fifteen()
         {
-            _tennis.SetScore(40, 15);
-            _score = _tennis.Score();
-            Assert.AreEqual("Forty Fifteen", _score);
+            _tennis.SetPointCount(3, 1);
+            var score = _tennis.Score();
+            Assert.AreEqual("Forty Fifteen", score);
+        }
+
+        [TestMethod]
+        public void Forty_Love()
+        {
+            _tennis.SetPointCount(3, 0);
+            var score = _tennis.Score();
+            Assert.AreEqual("Forty Love", score);
+        }
+
+        [TestMethod]
+        public void Forty_Thirty()
+        {
+            _tennis.SetPointCount(3, 2);
+            var score = _tennis.Score();
+            Assert.AreEqual("Forty Thirty", score);
         }
 
         [TestMethod]
         public void Love_All()
         {
-            _tennis.SetScore(0, 0);
-            _score = _tennis.Score();
-
-            Assert.AreEqual("Love All", _score);
+            _tennis.SetPointCount(0, 0);
+            var score = _tennis.Score();
+            Assert.AreEqual("Love All", score);
         }
 
         [TestMethod]
-        public void Player_Adv()
+        public void Love_Fifteen()
         {
-            _tennis.SetPlayer("Sherry", "April");
-            _tennis.SetScore(41, 40);
-            _score = _tennis.Score();
-
-            Assert.AreEqual("Sherry Adv", _score);
+            _tennis.SetPointCount(0, 1);
+            var score = _tennis.Score();
+            Assert.AreEqual("Love Fifteen", score);
         }
 
         [TestMethod]
-        public void Player_Win()
+        public void Love_Forty()
         {
-            _tennis.SetPlayer("Sherry", "April");
-            _tennis.SetScore(42, 40);
-            _score = _tennis.Score();
+            _tennis.SetPointCount(0, 3);
+            var score = _tennis.Score();
+            Assert.AreEqual("Love Forty", score);
+        }
 
-            Assert.AreEqual("Sherry Win", _score);
+        [TestMethod]
+        public void Love_Thirty()
+        {
+            _tennis.SetPointCount(0, 2);
+            var score = _tennis.Score();
+            Assert.AreEqual("Love Thirty", score);
+        }
+
+        [TestMethod]
+        public void Player1_Adv()
+        {
+            _tennis.SetPointCount(4, 3);
+            var score = _tennis.Score();
+            Assert.AreEqual("Sherry Adv", score);
+        }
+
+        [TestMethod]
+        public void Player1_Win()
+        {
+            _tennis.SetPointCount(5, 3);
+            var score = _tennis.Score();
+            Assert.AreEqual("Sherry Win", score);
+        }
+
+        [TestMethod]
+        public void Player2_Adv()
+        {
+            _tennis.SetPointCount(3, 4);
+            var score = _tennis.Score();
+            Assert.AreEqual("April Adv", score);
+        }
+
+        [TestMethod]
+        public void Player2_Win()
+        {
+            _tennis.SetPointCount(3, 5);
+            var score = _tennis.Score();
+            Assert.AreEqual("April Win", score);
         }
 
         [TestMethod]
         public void Thirty_All()
         {
-            _tennis.SetScore(30, 30);
-            _score = _tennis.Score();
-            Assert.AreEqual("Thirty All", _score);
+            _tennis.SetPointCount(2, 2);
+            var score = _tennis.Score();
+            Assert.AreEqual("Thirty All", score);
         }
 
         [TestMethod]
         public void Thirty_Fifteen()
         {
-            _tennis.SetScore(30, 15);
-            _score = _tennis.Score();
-            Assert.AreEqual("Thirty Fifteen", _score);
+            _tennis.SetPointCount(2, 1);
+            var score = _tennis.Score();
+            Assert.AreEqual("Thirty Fifteen", score);
+        }
+
+        [TestMethod]
+        public void Thirty_Forty()
+        {
+            _tennis.SetPointCount(2, 3);
+            var score = _tennis.Score();
+            Assert.AreEqual("Thirty Forty", score);
         }
 
         [TestMethod]
         public void Thirty_Love()
         {
-            _tennis.SetScore(30, 0);
-            _score = _tennis.Score();
-            Assert.AreEqual("Thirty Love", _score);
+            _tennis.SetPointCount(2, 0);
+            var score = _tennis.Score();
+            Assert.AreEqual("Thirty Love", score);
         }
     }
 }
